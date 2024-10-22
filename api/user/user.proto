@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package user;
+
+import "google/api/annotations.proto";
+
+option go_package = "kratos_learn/api/user;user";
+
+// The user service definition.
+service User {
+  // Sends a user
+  rpc UserFind (UserInfoRequest) returns (UserInfo) {
+    option (google.api.http) = {
+      get: "/user/{id}"
+    };
+  }
+  // Gets user info
+  rpc UserList (UserListRequest) returns (UserListReply) {
+    option (google.api.http) = {
+      get: "/user"
+    };
+  }
+  // Saves user info
+  rpc UserSave (UserSaveRequest) returns (UserSaveReply) {
+    option (google.api.http) = {
+      post: "/user"
+      body: "*"
+    };
+  }
+  // Deletes user info
+  rpc UserDelete (UserDeleteRequest) returns (UserDeleteReply) {
+      option (google.api.http) = {
+          delete: "/user/{id}"
+      };
+  }
+}
+
+// The request message containing the user's id.
+message UserInfoRequest {
+  int64 id = 1;
+}
+
+// The response message containing the user info
+message UserInfo {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+  string phone = 4;
+  string address = 5;
+}
+
+// The request message containing the user's list
+message UserListRequest {
+  int64 page = 1;
+  int64 page_size = 2;
+}
+
+// The response message containing the user list
+message UserListReply {
+  repeated UserInfo user = 1;
+}
+
+// The request message containing the user's info
+message UserSaveRequest {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+  string phone = 4;
+  string address = 5;
+}
+
+// The response message containing the user save
+message UserSaveReply {
+  int64 id = 1;
+}
+
+// The request message containing the user's id
+message UserDeleteRequest {
+  int64 id = 1;
+}
+
+// The response message containing the user delete
+message UserDeleteReply {
+  int64 id = 1;
+}

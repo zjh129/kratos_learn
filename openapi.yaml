@@ -3,19 +3,58 @@
 
 openapi: 3.0.3
 info:
-    title: Greeter API
-    description: The greeting service definition.
+    title: User API
+    description: The user service definition.
     version: 0.0.1
 paths:
-    /helloworld/{name}:
+    /user:
         get:
             tags:
-                - Greeter
-                - subgroup
-            description: Sends a greeting
-            operationId: Greeter_SayHello
+                - User
+            description: Gets user info
+            operationId: User_UserList
             parameters:
-                - name: name
+                - name: page
+                  in: query
+                  schema:
+                    type: string
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.UserListReply'
+        post:
+            tags:
+                - User
+            description: Saves user info
+            operationId: User_UserSave
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.UserSaveRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.UserSaveReply'
+    /user/{id}:
+        get:
+            tags:
+                - User
+            description: Sends a user
+            operationId: User_UserFind
+            parameters:
+                - name: id
                   in: path
                   required: true
                   schema:
@@ -26,14 +65,74 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/helloworld.v1.HelloReply'
+                                $ref: '#/components/schemas/user.UserInfo'
+        delete:
+            tags:
+                - User
+            description: Deletes user info
+            operationId: User_UserDelete
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.UserDeleteReply'
 components:
     schemas:
-        helloworld.v1.HelloReply:
+        user.UserDeleteReply:
             type: object
             properties:
-                message:
+                id:
                     type: string
-            description: The response message containing the greetings
+            description: The response message containing the user delete
+        user.UserInfo:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                address:
+                    type: string
+            description: The response message containing the user info
+        user.UserListReply:
+            type: object
+            properties:
+                user:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user.UserInfo'
+            description: The response message containing the user list
+        user.UserSaveReply:
+            type: object
+            properties:
+                id:
+                    type: string
+            description: The response message containing the user save
+        user.UserSaveRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                address:
+                    type: string
+            description: The request message containing the user's info
 tags:
-    - name: Greeter
+    - name: User
