@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package kratos.api;
+
+option go_package = "kratos_learn/internal/conf;conf";
+
+
+message ConfDriver {
+    string type = 1;
+    ConfApollo apollo = 2;
+    ConfConsul consul = 3;
+    ConfNacos nacos = 4;
+}
+// apollo config
+message ConfApollo {
+    string app_id = 1;
+    string cluster = 2;
+    string endpoint = 3;
+    string namespace_name = 4;
+    string secret = 5;
+}
+// consul config
+message ConfConsul {
+    string address = 1;
+    string scheme = 2;
+    string path_prefix = 3;
+    string token = 4;
+    string path = 5;
+}
+
+// nacos config
+message ConfNacos {
+    repeated string addrs = 1;
+    string namespace = 2;
+    string username = 3;
+    string password = 4;
+    string data_id = 5;
+    string group = 6;
+}
