@@ -71,6 +71,12 @@ build:
 ent:
 	cd internal/data/ && ent generate ./ent/schema
 
+.PHONY: entimport
+entimport:
+	cd internal/data/ && \
+    go run -mod=mod ariga.io/entimport/cmd/entimport -dsn "mysql://root:root@tcp(localhost:3306)/test" -tables "user" && \
+    ent generate ./ent/schema
+
 .PHONY: generate
 # generate
 generate:
