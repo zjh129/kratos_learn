@@ -2,12 +2,19 @@ syntax = "proto3";
 
 package user;
 
+import "errors/errors.proto";
+
 option go_package = "kratos_learn/api/user;user";
 option java_multiple_files = true;
-option java_package = "helloworld.v1";
-option objc_class_prefix = "APIHelloworldV1";
+option java_package = "kratos_learn.user";
+option objc_class_prefix = "APIKratosLearnUser";
 
 enum ErrorReason {
-  GREETER_UNSPECIFIED = 0;
-  USER_NOT_FOUND = 1;
+    // 设置缺省错误码
+    option (errors.default_code) = 500;
+
+    // 为某个枚举单独设置错误码
+    GREETER_UNSPECIFIED = 0;
+    USER_NOT_FOUND = 1 [(errors.code) = 404];
+    USER_ALREADY_EXISTS = 2 [(errors.code) = 409];
 }
