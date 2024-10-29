@@ -22,9 +22,9 @@ init:
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go install github.com/go-kratos/kratos/cmd/kratos/v2@latest
 	go install github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v2@latest
-	go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest
 	go install github.com/google/wire/cmd/wire@latest
 	go install entgo.io/ent/cmd/ent@latest
+	go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
 
 .PHONY: config
 # generate internal proto
@@ -53,10 +53,23 @@ errors:
              --go-errors_out=paths=source_relative:. \
              $(API_PROTO_FILES)
 
+.PHONY: swagger
+# generate swagger
+swagger:
+	protoc --proto_path=. \
+	        --proto_path=./third_party \
+	        --openapiv2_out . \
+	        --openapiv2_opt logtostderr=true \
+           $(API_PROTO_FILES)
+
 .PHONY: build
 # build
 build:
 	mkdir -p bin/ && go build -ldflags "-X main.Version=$(VERSION)" -o ./bin/ ./...
+
+.PHONY: ent
+ent:
+	cd internal/data/ && ent generate ./ent/schema
 
 .PHONY: generate
 # generate
@@ -72,11 +85,7 @@ wire:
 
 .PHONY: all
 # generate all
-all:
-	make api;
-	make errors;
-	make config;
-	make generate;
+all: api errors config generate
 
 # show help
 help:
