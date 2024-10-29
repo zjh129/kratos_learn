@@ -1,18 +1,4 @@
 type: "consul"
-apollo:
-  app_id: kratos_learn
-  cluster: dev
-  endpoint: http://localhost:8080
-  namespace_name: application,event.yaml,demo.json
-  secret: ad75b33c77ae4b9c9626d969c44f41ee
 consul:
   address: 127.0.0.1:8500
   path: kratos_learn/configs
-nacos:
-  addrs:
-    - 127.0.0.1:8848
-  namespace: 232927f3-4466-4da5-8042-34c50d09ac1b
-  username: nacos
-  password: nacos
-  data_id: configs.yaml
-  group: dev

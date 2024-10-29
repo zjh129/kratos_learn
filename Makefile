@@ -44,6 +44,7 @@ api:
 	       --openapi_out=fq_schema_naming=true,default_response=false:. \
 	       $(API_PROTO_FILES)
 
+# generate api errors
 errors:
 	protoc --proto_path=. \
              --proto_path=./third_party \
@@ -62,12 +63,18 @@ generate:
 	go generate ./...
 	go mod tidy
 
+
+.PHONY: wire
+# generate wire
+wire:
+	wire ./...
+
 .PHONY: all
 # generate all
 all:
 	make api;
-	make config;
 	make errors;
+	make config;
 	make generate;
 
 # show help
