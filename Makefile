@@ -24,7 +24,7 @@ init:
 	go install github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v2@latest
 	go install github.com/google/wire/cmd/wire@latest
 	go install entgo.io/ent/cmd/ent@latest
-	go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
+	go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest
 
 .PHONY: config
 # generate internal proto
@@ -42,7 +42,7 @@ api:
  	       --go_out=paths=source_relative:./api \
  	       --go-http_out=paths=source_relative:./api \
  	       --go-grpc_out=paths=source_relative:./api \
-	       --openapi_out=fq_schema_naming=true,default_response=false:. \
+	       --openapi_out=fq_schema_naming=true,default_response=false,naming=proto:. \
 	       $(API_PROTO_FILES)
 
 # generate api errors
@@ -53,15 +53,6 @@ errors:
              --go-errors_out=paths=source_relative:. \
              $(API_PROTO_FILES)
 
-.PHONY: swagger
-# generate swagger
-swagger:
-	protoc --proto_path=. \
-	        --proto_path=./third_party \
-	        --openapiv2_out . \
-	        --openapiv2_opt logtostderr=true \
-           $(API_PROTO_FILES)
-
 .PHONY: build
 # build
 build:
@@ -69,13 +60,12 @@ build:
 
 .PHONY: ent
 ent:
-	cd internal/data/ && ent generate ./ent/schema
+	cd internal/data/ && ent generate --feature intercept ./ent/schema
 
 .PHONY: entimport
 entimport:
 	cd internal/data/ && \
-    go run -mod=mod ariga.io/entimport/cmd/entimport -dsn "mysql://root:root@tcp(localhost:3306)/test" -tables "user" && \
-    ent generate ./ent/schema
+    go run -mod=mod ariga.io/entimport/cmd/entimport -dsn "mysql://root:root@tcp(127.0.0.1:3306)/kratos_learn"
 
 .PHONY: generate
 # generate
@@ -83,6 +73,17 @@ generate:
 	go generate ./...
 	go mod tidy
 
+.PHONY: run
+# run
+run:
+	kratos run
+
+.PHONY: soft
+# soft
+soft:
+	cd soft && \
+ 	docker-compose rm && \
+ 	docker-compose up -d
 
 .PHONY: wire
 # generate wire

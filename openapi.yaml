@@ -8,27 +8,6 @@ info:
     version: 0.0.1
 paths:
     /user:
-        get:
-            tags:
-                - User
-            description: Gets user info
-            operationId: User_UserList
-            parameters:
-                - name: page
-                  in: query
-                  schema:
-                    type: string
-                - name: pageSize
-                  in: query
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/user.UserListReply'
         post:
             tags:
                 - User
@@ -84,6 +63,42 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/user.UserDeleteReply'
+    /users:
+        get:
+            tags:
+                - User
+            description: Gets user info
+            operationId: User_UserList
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: string
+                - name: page_size
+                  in: query
+                  schema:
+                    type: string
+                - name: name
+                  in: query
+                  schema:
+                    type: string
+                - name: type
+                  in: query
+                  schema:
+                    type: integer
+                    format: enum
+                - name: status
+                  in: query
+                  schema:
+                    type: integer
+                    format: enum
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.UserListReply'
 components:
     schemas:
         user.UserDeleteReply:
@@ -97,19 +112,29 @@ components:
             properties:
                 id:
                     type: string
+                uqid:
+                    type: string
                 name:
                     type: string
-                email:
+                avatar:
                     type: string
-                phone:
+                type:
+                    type: integer
+                    format: enum
+                is_enable:
+                    type: boolean
+                status:
+                    type: integer
+                    format: enum
+                created_at:
                     type: string
-                address:
+                updated_at:
                     type: string
             description: The response message containing the user info
         user.UserListReply:
             type: object
             properties:
-                user:
+                list:
                     type: array
                     items:
                         $ref: '#/components/schemas/user.UserInfo'
@@ -127,12 +152,16 @@ components:
                     type: string
                 name:
                     type: string
-                email:
+                avatar:
                     type: string
-                phone:
-                    type: string
-                address:
-                    type: string
+                type:
+                    type: integer
+                    format: enum
+                is_enable:
+                    type: boolean
+                status:
+                    type: integer
+                    format: enum
             description: The request message containing the user's info
 tags:
     - name: User

@@ -9,24 +9,23 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// User holds the schema definition for the User entity.
 type User struct {
 	ent.Schema
 }
 
-// Fields of the User.
 func (User) Fields() []ent.Field {
-	return []ent.Field{field.Int32("id").Comment("数据表自增ID"), field.String("name").Comment("用户名"), field.String("email").
-
-		// Edges of the User.
-		Comment("邮箱"), field.String("mobile").Comment("手机号"), field.Bool("status").Comment("状态"), field.Time("created_at").Comment("添加时间"), field.Time("updated_at").Comment("修改时间"), field.Time("deleted_at").Optional().Comment("删除时间"), field.String("uuid").Comment("用户唯一标识")}
-
+	return []ent.Field{field.Uint32("id").Comment("用户ID"), field.String("uqid").Comment("用户唯一标识"), field.String("name").Comment("用户名称"), field.String("avatar").Comment("用户头像地址"), field.Uint8("type").Comment("用户类型(1:OA 用户; 2: 普通账号)"), field.Uint8("is_enable").Comment("可用状态(0:禁用,1:启用)"), field.Uint8("status").Comment("可用状态(1:启用,2:禁用)"), field.Time("created_at").Comment("添加时间"), field.Time("updated_at").Comment("修改时间")}
 }
-
 func (User) Edges() []ent.Edge {
-
 	return nil
 }
 func (User) Annotations() []schema.Annotation {
 	return []schema.Annotation{entsql.Annotation{Table: "user"}}
+}
+
+// Mixin of the User.
+func (User) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		SoftDeleteMixin{},
+	}
 }

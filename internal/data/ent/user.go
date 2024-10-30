@@ -16,24 +16,26 @@ import (
 type User struct {
 	config `json:"-"`
 	// ID of the ent.
-	// 数据表自增ID
-	ID int32 `json:"id,omitempty"`
-	// 用户名
+	// 用户ID
+	ID uint32 `json:"id,omitempty"`
+	// DeleteTime holds the value of the "delete_time" field.
+	DeleteTime time.Time `json:"delete_time,omitempty"`
+	// 用户唯一标识
+	Uqid string `json:"uqid,omitempty"`
+	// 用户名称
 	Name string `json:"name,omitempty"`
-	// 邮箱
-	Email string `json:"email,omitempty"`
-	// 手机号
-	Mobile string `json:"mobile,omitempty"`
-	// 状态
-	Status bool `json:"status,omitempty"`
+	// 用户头像地址
+	Avatar string `json:"avatar,omitempty"`
+	// 用户类型(1:OA 用户; 2: 普通账号)
+	Type uint8 `json:"type,omitempty"`
+	// 可用状态(0:禁用,1:启用)
+	IsEnable uint8 `json:"is_enable,omitempty"`
+	// 可用状态(1:启用,2:禁用)
+	Status uint8 `json:"status,omitempty"`
 	// 添加时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 修改时间
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// 删除时间
-	DeletedAt time.Time `json:"deleted_at,omitempty"`
-	// 用户唯一标识
-	UUID         string `json:"uuid,omitempty"`
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -42,13 +44,11 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldStatus:
-			values[i] = new(sql.NullBool)
-		case user.FieldID:
+		case user.FieldID, user.FieldType, user.FieldIsEnable, user.FieldStatus:
 			values[i] = new(sql.NullInt64)
-		case user.FieldName, user.FieldEmail, user.FieldMobile, user.FieldUUID:
+		case user.FieldUqid, user.FieldName, user.FieldAvatar:
 			values[i] = new(sql.NullString)
-		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt:
+		case user.FieldDeleteTime, user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -70,30 +70,48 @@ func (u *User) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			u.ID = int32(value.Int64)
+			u.ID = uint32(value.Int64)
+		case user.FieldDeleteTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field delete_time", values[i])
+			} else if value.Valid {
+				u.DeleteTime = value.Time
+			}
+		case user.FieldUqid:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field uqid", values[i])
+			} else if value.Valid {
+				u.Uqid = value.String
+			}
 		case user.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				u.Name = value.String
 			}
-		case user.FieldEmail:
+		case user.FieldAvatar:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field email", values[i])
+				return fmt.Errorf("unexpected type %T for field avatar", values[i])
 			} else if value.Valid {
-				u.Email = value.String
+				u.Avatar = value.String
 			}
-		case user.FieldMobile:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field mobile", values[i])
+		case user.FieldType:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				u.Mobile = value.String
+				u.Type = uint8(value.Int64)
+			}
+		case user.FieldIsEnable:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field is_enable", values[i])
+			} else if value.Valid {
+				u.IsEnable = uint8(value.Int64)
 			}
 		case user.FieldStatus:
-			if value, ok := values[i].(*sql.NullBool); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				u.Status = value.Bool
+				u.Status = uint8(value.Int64)
 			}
 		case user.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -106,18 +124,6 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				u.UpdatedAt = value.Time
-			}
-		case user.FieldDeletedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
-			} else if value.Valid {
-				u.DeletedAt = value.Time
-			}
-		case user.FieldUUID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field uuid", values[i])
-			} else if value.Valid {
-				u.UUID = value.String
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
@@ -155,14 +161,23 @@ func (u *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", u.ID))
+	builder.WriteString("delete_time=")
+	builder.WriteString(u.DeleteTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("uqid=")
+	builder.WriteString(u.Uqid)
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(u.Name)
 	builder.WriteString(", ")
-	builder.WriteString("email=")
-	builder.WriteString(u.Email)
+	builder.WriteString("avatar=")
+	builder.WriteString(u.Avatar)
 	builder.WriteString(", ")
-	builder.WriteString("mobile=")
-	builder.WriteString(u.Mobile)
+	builder.WriteString("type=")
+	builder.WriteString(fmt.Sprintf("%v", u.Type))
+	builder.WriteString(", ")
+	builder.WriteString("is_enable=")
+	builder.WriteString(fmt.Sprintf("%v", u.IsEnable))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", u.Status))
@@ -172,12 +187,6 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(u.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("deleted_at=")
-	builder.WriteString(u.DeletedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("uuid=")
-	builder.WriteString(u.UUID)
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -8,78 +8,100 @@ option go_package = "kratos_learn/api/user;user";
 
 // The user service definition.
 service User {
-  // Sends a user
-  rpc UserFind (UserInfoRequest) returns (UserInfo) {
-    option (google.api.http) = {
-      get: "/user/{id}"
-    };
-  }
-  // Gets user info
-  rpc UserList (UserListRequest) returns (UserListReply) {
-    option (google.api.http) = {
-      get: "/user"
-    };
-  }
-  // Saves user info
-  rpc UserSave (UserSaveRequest) returns (UserSaveReply) {
-    option (google.api.http) = {
-      post: "/user"
-      body: "*"
-    };
-  }
-  // Deletes user info
-  rpc UserDelete (UserDeleteRequest) returns (UserDeleteReply) {
-      option (google.api.http) = {
-          delete: "/user/{id}"
-      };
-  }
+    // Sends a user
+    rpc UserFind (UserInfoRequest) returns (UserInfo) {
+        option (google.api.http) = {
+            get: "/user/{id}"
+        };
+    }
+    // Gets user info
+    rpc UserList (UserListRequest) returns (UserListReply) {
+        option (google.api.http) = {
+            get: "/users"
+        };
+    }
+    // Saves user info
+    rpc UserSave (UserSaveRequest) returns (UserSaveReply) {
+        option (google.api.http) = {
+            post: "/user"
+            body: "*"
+        };
+    }
+    // Deletes user info
+    rpc UserDelete (UserDeleteRequest) returns (UserDeleteReply) {
+        option (google.api.http) = {
+            delete: "/user/{id}"
+        };
+    }
 }
 
 // The request message containing the user's id.
 message UserInfoRequest {
-  int64 id = 1;
+    int64 id = 1;
+}
+
+// The user type
+enum UserType {
+    USER_TYPE_UNSPECIFIED = 0;
+    USER_TYPE_OA = 1;
+    USER_TYPE_NORMAL = 2;
+}
+
+// The user status
+enum UserStatus {
+    USER_STATUS_UNSPECIFIED = 0;
+    USER_STATUS_ENABLE = 1;
+    USER_STATUS_DISABLE = 2;
 }
 
 // The response message containing the user info
 message UserInfo {
-  int64 id = 1;
-  string name = 2;
-  string email = 3;
-  string phone = 4;
-  string address = 5;
+    int64 id = 1; // 用户ID
+    string uqid = 2; // 用户唯一标识
+    string name = 3; // 用户名称
+    string avatar = 4; // 用户头像地址
+    UserType type = 5; // 用户类型(1:OA 用户; 2: 普通账号)
+    bool is_enable = 6; // 可用状态(0:禁用,1:启用)
+    UserStatus status = 7; // 可用状态(1:启用,2:禁用)
+    string created_at = 8; // 添加时间
+    string updated_at = 9; // 修改时间
 }
 
 // The request message containing the user's list
 message UserListRequest {
-  int64 page = 1;
-  int64 page_size = 2;
+    int64 page = 1;
+    int64 page_size = 2;
+    string name = 3;
+    UserType type = 4;
+    UserStatus status = 5;
 }
 
 // The response message containing the user list
 message UserListReply {
-  repeated UserInfo user = 1;
+    repeated UserInfo list = 1;
 }
 
 // The request message containing the user's info
 message UserSaveRequest {
-  int64 id = 1;
-  string name = 2;
-  string email = 3;
-  string phone = 4;
-  string address = 5;
+    int64 id = 1;
+    string name = 2;
+    string avatar = 3;
+    UserType type = 4;
+    bool is_enable = 5;
+    UserStatus status = 6;
 }
 
 // The response message containing the user save
 message UserSaveReply {
-  int64 id = 1;
+    int64 id = 1;
 }
 
 // The request message containing the user's id
 message UserDeleteRequest {
-  int64 id = 1;
+    int64 id = 1;
 }
 
 // The response message containing the user delete
 message UserDeleteReply {
-  int64 id = 1;
+    int64 id = 1;
 }

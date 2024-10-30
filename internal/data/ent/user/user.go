@@ -3,6 +3,7 @@
 package user
 
 import (
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 )
 
@@ -11,22 +12,24 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldDeleteTime holds the string denoting the delete_time field in the database.
+	FieldDeleteTime = "delete_time"
+	// FieldUqid holds the string denoting the uqid field in the database.
+	FieldUqid = "uqid"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldEmail holds the string denoting the email field in the database.
-	FieldEmail = "email"
-	// FieldMobile holds the string denoting the mobile field in the database.
-	FieldMobile = "mobile"
+	// FieldAvatar holds the string denoting the avatar field in the database.
+	FieldAvatar = "avatar"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
+	// FieldIsEnable holds the string denoting the is_enable field in the database.
+	FieldIsEnable = "is_enable"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
-	FieldDeletedAt = "deleted_at"
-	// FieldUUID holds the string denoting the uuid field in the database.
-	FieldUUID = "uuid"
 	// Table holds the table name of the user in the database.
 	Table = "user"
 )
@@ -34,14 +37,15 @@ const (
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
+	FieldDeleteTime,
+	FieldUqid,
 	FieldName,
-	FieldEmail,
-	FieldMobile,
+	FieldAvatar,
+	FieldType,
+	FieldIsEnable,
 	FieldStatus,
 	FieldCreatedAt,
 	FieldUpdatedAt,
-	FieldDeletedAt,
-	FieldUUID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -54,6 +58,16 @@ func ValidColumn(column string) bool {
 	return false
 }
 
+// Note that the variables below are initialized by the runtime
+// package on the initialization of the application. Therefore,
+// it should be imported in the main as follows:
+//
+//	import _ "kratos_learn/internal/data/ent/runtime"
+var (
+	Hooks        [1]ent.Hook
+	Interceptors [1]ent.Interceptor
+)
+
 // OrderOption defines the ordering options for the User queries.
 type OrderOption func(*sql.Selector)
 
@@ -62,19 +76,34 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
+// ByDeleteTime orders the results by the delete_time field.
+func ByDeleteTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeleteTime, opts...).ToFunc()
+}
+
+// ByUqid orders the results by the uqid field.
+func ByUqid(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUqid, opts...).ToFunc()
+}
+
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByEmail orders the results by the email field.
-func ByEmail(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEmail, opts...).ToFunc()
+// ByAvatar orders the results by the avatar field.
+func ByAvatar(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAvatar, opts...).ToFunc()
 }
 
-// ByMobile orders the results by the mobile field.
-func ByMobile(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldMobile, opts...).ToFunc()
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
+}
+
+// ByIsEnable orders the results by the is_enable field.
+func ByIsEnable(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsEnable, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.
@@ -90,14 +119,4 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
-}
-
-// ByDeletedAt orders the results by the deleted_at field.
-func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
-}
-
-// ByUUID orders the results by the uuid field.
-func ByUUID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUUID, opts...).ToFunc()
 }

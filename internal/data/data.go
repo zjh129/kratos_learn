@@ -8,10 +8,14 @@ import (
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
+
+	// init mysql driver
+	_ "github.com/go-sql-driver/mysql"
+	_ "kratos_learn/internal/data/ent/runtime" // Import the runtime package
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewEntClient, NewGreeterRepo)
+var ProviderSet = wire.NewSet(NewData, NewEntClient, NewUserRepo)
 
 // Data .
 type Data struct {

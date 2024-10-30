@@ -2,7 +2,21 @@
 
 package runtime
 
-// The schema-stitching logic is generated in kratos_learn/internal/data/ent/runtime.go
+import (
+	"kratos_learn/internal/data/ent/schema"
+	"kratos_learn/internal/data/ent/user"
+)
+
+// The init function reads all schema descriptors with runtime code
+// (default values, validators, hooks and policies) and stitches it
+// to their package variables.
+func init() {
+	userMixin := schema.User{}.Mixin()
+	userMixinHooks0 := userMixin[0].Hooks()
+	user.Hooks[0] = userMixinHooks0[0]
+	userMixinInters0 := userMixin[0].Interceptors()
+	user.Interceptors[0] = userMixinInters0[0]
+}
 
 const (
 	Version = "v0.14.1"                                         // Version of ent codegen.

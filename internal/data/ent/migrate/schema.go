@@ -11,15 +11,16 @@ import (
 var (
 	// UserColumns holds the columns for the "user" table.
 	UserColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt32, Increment: true},
+		{Name: "id", Type: field.TypeUint32, Increment: true},
+		{Name: "delete_time", Type: field.TypeTime, Nullable: true},
+		{Name: "uqid", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString},
-		{Name: "email", Type: field.TypeString},
-		{Name: "mobile", Type: field.TypeString},
-		{Name: "status", Type: field.TypeBool},
+		{Name: "avatar", Type: field.TypeString},
+		{Name: "type", Type: field.TypeUint8},
+		{Name: "is_enable", Type: field.TypeUint8},
+		{Name: "status", Type: field.TypeUint8},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "uuid", Type: field.TypeString},
 	}
 	// UserTable holds the schema information for the "user" table.
 	UserTable = &schema.Table{

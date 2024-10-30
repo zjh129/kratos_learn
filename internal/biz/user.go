@@ -14,33 +14,81 @@ var (
 	ErrUserNotFound = errors.NotFound(user.ErrorReason_USER_NOT_FOUND.String(), "user not found")
 )
 
-// Greeter is a Greeter model.
-type Greeter struct {
-	Hello string
+// User is a User model.
+type User struct {
+	Id        int64
+	Uqid      string
+	Name      string
+	Avatar    string
+	Type      UserType
+	IsEnable  bool
+	Status    UserStatus
+	CreatedAt string
+	UpdatedAt string
 }
 
-// GreeterRepo is a Greater repo.
-type GreeterRepo interface {
-	Save(context.Context, *Greeter) (*Greeter, error)
-	Update(context.Context, *Greeter) (*Greeter, error)
-	FindByID(context.Context, int64) (*Greeter, error)
-	ListByHello(context.Context, string) ([]*Greeter, error)
-	ListAll(context.Context) ([]*Greeter, error)
+type UserType int64
+
+const (
+	AdminUser  UserType = 1
+	NormalUser UserType = 2
+)
+
+type UserStatus int64
+
+const (
+	NormalStatus  UserStatus = 1
+	DisableStatus UserStatus = 2
+)
+
+// UserList is a User list.
+type UserListCondition struct {
+	Page     int64      // 页码
+	PageSize int64      // 每页数量
+	Name     string     // 名称
+	Type     UserType   // 类型
+	Status   UserStatus // 状态
 }
 
-// GreeterUsecase is a Greeter usecase.
-type GreeterUsecase struct {
-	repo GreeterRepo
+// UserRepo is a User repo.
+type UserRepo interface {
+	Save(context.Context, *User) (*User, error)
+	Delete(context.Context, int64) error
+	FindByID(context.Context, int64) (*User, error)
+	List(context.Context, *UserListCondition) ([]*User, error)
+}
+
+// UserUsecase is a User usecase.
+type UserUsecase struct {
+	repo UserRepo
 	log  *log.Helper
 }
 
-// NewGreeterUsecase new a Greeter usecase.
-func NewGreeterUsecase(repo GreeterRepo, logger log.Logger) *GreeterUsecase {
-	return &GreeterUsecase{repo: repo, log: log.NewHelper(logger)}
+// NewUserUsecase new a User usecase.
+func NewUserUsecase(repo UserRepo, logger log.Logger) *UserUsecase {
+	return &UserUsecase{repo: repo, log: log.NewHelper(logger)}
 }
 
-// CreateGreeter creates a Greeter, and returns the new Greeter.
-func (uc *GreeterUsecase) CreateGreeter(ctx context.Context, g *Greeter) (*Greeter, error) {
-	uc.log.WithContext(ctx).Infof("CreateGreeter: %v", g.Hello)
-	return uc.repo.Save(ctx, g)
+// SaveUser creates a User, and returns the new User.
+func (uc *UserUsecase) SaveUser(ctx context.Context, u *User) (*User, error) {
+	uc.log.WithContext(ctx).Infof("CreateUser: %v", u.Name)
+	return uc.repo.Save(ctx, u)
+}
+
+// FindUser finds the User by the ID.
+func (uc *UserUsecase) FindUser(ctx context.Context, id int64) (*User, error) {
+	uc.log.WithContext(ctx).Infof("FindUser: %v", id)
+	return uc.repo.FindByID(ctx, id)
+}
+
+// DeleteUser deletes the User by the ID.
+func (uc *UserUsecase) DeleteUser(ctx context.Context, id int64) error {
+	uc.log.WithContext(ctx).Infof("DeleteUser: %v", id)
+	return uc.repo.Delete(ctx, id)
+}
+
+// ListUser lists the Users.
+func (uc *UserUsecase) ListUser(ctx context.Context, c *UserListCondition) ([]*User, error) {
+	uc.log.WithContext(ctx).Infof("ListUser: %v", c)
+	return uc.repo.List(ctx, c)
 }

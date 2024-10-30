@@ -25,13 +25,14 @@ import (
 
 // wireApp init kratos application.
 func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger, registrar registry.Registrar) (*kratos.App, func(), error) {
-	dataData, cleanup, err := data.NewData(confData, logger)
+	client := data.NewEntClient(confData, logger)
+	dataData, cleanup, err := data.NewData(client, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	greeterRepo := data.NewGreeterRepo(dataData, logger)
-	greeterUsecase := biz.NewGreeterUsecase(greeterRepo, logger)
-	userService := service.NewGreeterService(greeterUsecase)
+	userRepo := data.NewUserRepo(dataData, logger)
+	userUsecase := biz.NewUserUsecase(userRepo, logger)
+	userService := service.NewUserService(userUsecase)
 	grpcServer := server.NewGRPCServer(confServer, userService, logger)
 	httpServer := server.NewHTTPServer(confServer, userService, logger)
 	app := newApp(logger, grpcServer, httpServer, registrar)
