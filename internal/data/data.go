@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/google/uuid"
 	cache "github.com/mgtv-tech/jetcache-go"
 	"github.com/mgtv-tech/jetcache-go/local"
@@ -24,6 +25,8 @@ import (
 
 // ProviderSet is data providers.
 var ProviderSet = wire.NewSet(NewData, NewEntClient, NewUserRepo, NewJetCache)
+
+var ErrRecordNotFound = errors.New("record not found")
 
 // Data .
 type Data struct {
@@ -88,7 +91,7 @@ func NewJetCache(c *conf.Data, logger log.Logger) cache.Cache {
 	mycache := cache.New(cache.WithName("kratos-learn"),
 		cache.WithRemote(remote.NewGoRedisV9Adapter(ring)),
 		cache.WithLocal(local.NewFreeCache(256*local.MB, time.Minute)),
-		cache.WithErrNotFound(&ent.NotFoundError{}),
+		cache.WithErrNotFound(ErrRecordNotFound),
 		cache.WithRefreshDuration(time.Minute),
 		cache.WithSyncLocal(true),
 		cache.WithEventHandler(func(event *cache.Event) {

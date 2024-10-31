@@ -109,7 +109,14 @@ func (u *userRepo) FindByID(ctx context.Context, i int64) (*biz.User, error) {
 	getu := &ent.User{}
 	if err := u.data.cache.Once(ctx, cacheKey, cache.Value(getu), cache.TTL(time.Hour), cache.Refresh(true),
 		cache.Do(func(ctx context.Context) (any, error) {
-			return u.data.db.User.Get(ctx, uint32(i))
+			get, err := u.data.db.User.Get(ctx, uint32(i))
+			if err != nil {
+				if ent.IsNotFound(err) {
+					return nil, ErrRecordNotFound
+				}
+				return nil, err
+			}
+			return get, nil
 		})); err != nil {
 		return nil, err
 	}
