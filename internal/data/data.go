@@ -85,7 +85,7 @@ func NewJetCache(c *conf.Data, logger log.Logger) cache.Cache {
 	sourceID := uuid.NewString() // Unique identifier for this cache instance
 	channelName := "syncUserChannel"
 	pubSub := ring.Subscribe(context.Background(), channelName)
-	mycache := cache.New(cache.WithName("any"),
+	mycache := cache.New(cache.WithName("kratos-learn"),
 		cache.WithRemote(remote.NewGoRedisV9Adapter(ring)),
 		cache.WithLocal(local.NewFreeCache(256*local.MB, time.Minute)),
 		cache.WithErrNotFound(&ent.NotFoundError{}),
