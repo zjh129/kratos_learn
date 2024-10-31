@@ -2,8 +2,10 @@ package data
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
+	cache "github.com/mgtv-tech/jetcache-go"
 	"kratos_learn/internal/biz"
 	"kratos_learn/internal/data/ent"
 	"kratos_learn/internal/data/ent/user"
@@ -21,6 +23,10 @@ func NewUserRepo(data *Data, logger log.Logger) biz.UserRepo {
 type userRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func (u *userRepo) getCacheKey(id int64) string {
+	return fmt.Sprintf("kratos_learn:user:%d", id)
 }
 
 func (u *userRepo) Save(ctx context.Context, user *biz.User) (*biz.User, error) {
@@ -66,6 +72,12 @@ func (u *userRepo) Save(ctx context.Context, user *biz.User) (*biz.User, error) 
 			return nil, err
 		}
 	}
+	// cache
+	cacheKey := u.getCacheKey(int64(get.ID))
+	err = u.data.cache.Set(ctx, cacheKey, cache.Value(get), cache.TTL(time.Hour))
+	if err != nil {
+		return nil, err
+	}
 	return &biz.User{
 		Id:        int64(get.ID),
 		Uqid:      get.Uqid,
@@ -84,12 +96,21 @@ func (u *userRepo) Delete(ctx context.Context, i int64) error {
 	if err != nil {
 		return err
 	}
+	cacheKey := u.getCacheKey(i)
+	err = u.data.cache.Delete(ctx, cacheKey)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (u *userRepo) FindByID(ctx context.Context, i int64) (*biz.User, error) {
-	getu, err := u.data.db.User.Get(ctx, uint32(i))
-	if err != nil {
+	cacheKey := u.getCacheKey(i)
+	getu := &ent.User{}
+	if err := u.data.cache.Once(ctx, cacheKey, cache.Value(getu), cache.TTL(time.Hour), cache.Refresh(true),
+		cache.Do(func(ctx context.Context) (any, error) {
+			return u.data.db.User.Get(ctx, uint32(i))
+		})); err != nil {
 		return nil, err
 	}
 	return &biz.User{

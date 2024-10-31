@@ -2,33 +2,47 @@ package data
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/google/uuid"
+	cache "github.com/mgtv-tech/jetcache-go"
+	"github.com/mgtv-tech/jetcache-go/local"
+	"github.com/mgtv-tech/jetcache-go/remote"
+	"github.com/redis/go-redis/v9"
 	"kratos_learn/internal/conf"
 	"kratos_learn/internal/data/ent"
 	"kratos_learn/internal/data/ent/migrate"
+	"strings"
+	"time"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 
 	// init mysql driver
 	_ "github.com/go-sql-driver/mysql"
-	_ "kratos_learn/internal/data/ent/runtime" // Import the runtime package
+	_ "kratos_learn/internal/data/ent/runtime"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewEntClient, NewUserRepo)
+var ProviderSet = wire.NewSet(NewData, NewEntClient, NewUserRepo, NewJetCache)
 
 // Data .
 type Data struct {
-	db  *ent.Client
-	log *log.Helper
+	db    *ent.Client
+	cache cache.Cache
+	log   *log.Helper
 }
 
 // NewData .
-func NewData(entClient *ent.Client, logger log.Logger) (*Data, func(), error) {
-	log := log.NewHelper(log.With(logger, "module", "catalog-service/data"))
+func NewData(
+	entClient *ent.Client,
+	jetCache cache.Cache,
+	logger log.Logger,
+) (*Data, func(), error) {
+	log := log.NewHelper(log.With(logger, "module", "kratos-learn/data"))
 	d := &Data{
-		db:  entClient,
-		log: log,
+		db:    entClient,
+		cache: jetCache,
+		log:   log,
 	}
 	cleanup := func() {
 		if err := d.db.Close(); err != nil {
@@ -39,7 +53,7 @@ func NewData(entClient *ent.Client, logger log.Logger) (*Data, func(), error) {
 }
 
 func NewEntClient(c *conf.Data, logger log.Logger) *ent.Client {
-	log := log.NewHelper(log.With(logger, "module", "catalog-service/data/ent"))
+	log := log.NewHelper(log.With(logger, "module", "kratos-learn/data/ent"))
 
 	client, err := ent.Open(
 		c.Database.Driver,
@@ -53,4 +67,53 @@ func NewEntClient(c *conf.Data, logger log.Logger) *ent.Client {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
 	return client
+}
+
+// NewJetCache init jetcache
+func NewJetCache(c *conf.Data, logger log.Logger) cache.Cache {
+	log := log.NewHelper(log.With(logger, "module", "kratos-learn/data/jetcache"))
+	redisAddrs := strings.Split(c.Redis.Addr, ":")
+	ring := redis.NewRing(&redis.RingOptions{
+		Addrs: map[string]string{
+			redisAddrs[0]: ":" + redisAddrs[1],
+		},
+		ReadTimeout:  c.Redis.ReadTimeout.AsDuration(),
+		WriteTimeout: c.Redis.WriteTimeout.AsDuration(),
+		DialTimeout:  time.Second * 2,
+		PoolSize:     10,
+	})
+	sourceID := uuid.NewString() // Unique identifier for this cache instance
+	channelName := "syncUserChannel"
+	pubSub := ring.Subscribe(context.Background(), channelName)
+	mycache := cache.New(cache.WithName("any"),
+		cache.WithRemote(remote.NewGoRedisV9Adapter(ring)),
+		cache.WithLocal(local.NewFreeCache(256*local.MB, time.Minute)),
+		cache.WithErrNotFound(&ent.NotFoundError{}),
+		cache.WithRefreshDuration(time.Minute),
+		cache.WithSyncLocal(true),
+		cache.WithEventHandler(func(event *cache.Event) {
+			// Broadcast local cache invalidation for the received keys
+			bs, _ := json.Marshal(event)
+			ring.Publish(context.Background(), channelName, string(bs))
+		}),
+	)
+	go func() {
+		for {
+			msg := <-pubSub.Channel()
+			var event *cache.Event
+			if err := json.Unmarshal([]byte(msg.Payload), &event); err != nil {
+				panic(err)
+			}
+			log.Infof("Received event: %v", event)
+
+			// Invalidate local cache for received keys (except own events)
+			if event.SourceID != sourceID {
+				for _, key := range event.Keys {
+					mycache.DeleteFromLocalCache(key)
+				}
+			}
+		}
+	}()
+
+	return mycache
 }
